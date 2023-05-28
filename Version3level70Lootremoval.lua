@@ -1,4 +1,8 @@
 local function RemoveItems(eventId, delay, repeats, player)
+    if player:GetData("logout_flag") then
+        return
+    end
+
     local lootTable = player:GetData("temp_lootTable")
     if lootTable then
         for _, loot in ipairs(lootTable) do
@@ -30,12 +34,19 @@ local function OnLoot(event, player, item, count)
     end
 end
 
-RegisterPlayerEvent(52, OnLoot)
+local function OnLogin(event, player)
+    player:SetData("logout_flag", false)
+    -- Register a periodic event to remove looted items every 1 second
+    player:RegisterEvent(RemoveItems, 1000, 0)
+end
+
+local function OnLogout(event, player)
+    player:SetData("logout_flag", true)
+end
+
+RegisterPlayerEvent(3, OnLogin)
+RegisterPlayerEvent(4, OnLogout)
+--RegisterPlayerEvent(52, OnLoot)
 RegisterPlayerEvent(53, OnLoot)
 RegisterPlayerEvent(32, OnLoot)
 RegisterPlayerEvent(56, OnLoot)
--- Register a periodic event to remove looted items every 1 second
-local worldPlayers = GetPlayersInWorld(TEAM_NEUTRAL) 
-for _, player in ipairs(worldPlayers) do
-    player:RegisterEvent(RemoveItems, 1000, 0)
-end
